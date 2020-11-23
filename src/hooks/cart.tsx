@@ -30,7 +30,12 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      // TODO LOAD ITEMS FROM ASYNC STORAGE
+      const productsInStorage = await AsyncStorage.getItem(
+        '@GoMarketplate:Products',
+      );
+      if (productsInStorage) {
+        setProducts(JSON.parse(productsInStorage));
+      }
     }
 
     loadProducts();
@@ -48,6 +53,10 @@ const CartProvider: React.FC = ({ children }) => {
       });
 
       if (isProductInCart.length === 0) {
+        await AsyncStorage.setItem(
+          '@GoMarketplate:Products',
+          JSON.stringify([...products, productToAdd]),
+        );
         setProducts([...products, productToAdd]);
       } else {
         const productToEdit =
@@ -62,6 +71,10 @@ const CartProvider: React.FC = ({ children }) => {
           quantity: productToEdit.quantity + 1,
         };
 
+        await AsyncStorage.setItem(
+          '@GoMarketplate:Products',
+          JSON.stringify([...newProducts, editedProduct]),
+        );
         setProducts([...newProducts, editedProduct]);
       }
     },
@@ -73,14 +86,21 @@ const CartProvider: React.FC = ({ children }) => {
       const productToEdit =
         products.find(item => item.id === id) || ({} as Product);
 
-      const newProducts = products.filter(item => item.id !== productToEdit.id);
-
       const editedProduct = {
         ...productToEdit,
         quantity: productToEdit.quantity + 1,
       };
 
-      setProducts([...newProducts, editedProduct]);
+      const index = products.indexOf(productToEdit);
+
+      const newProducts = [...products];
+      newProducts[index] = editedProduct;
+
+      await AsyncStorage.setItem(
+        '@GoMarketplate:Products',
+        JSON.stringify([...newProducts]),
+      );
+      setProducts([...newProducts]);
     },
     [products],
   );
@@ -90,14 +110,25 @@ const CartProvider: React.FC = ({ children }) => {
       const productToEdit =
         products.find(item => item.id === id) || ({} as Product);
 
-      const newProducts = products.filter(item => item.id !== productToEdit.id);
-
       const editedProduct = {
         ...productToEdit,
         quantity: productToEdit.quantity - 1,
       };
 
-      setProducts([...newProducts, editedProduct]);
+      const index = products.indexOf(productToEdit);
+      let newProducts = [...products];
+
+      if (editedProduct.quantity === 0) {
+        newProducts = newProducts.filter(item => item.id !== id);
+      } else {
+        newProducts[index] = editedProduct;
+      }
+
+      await AsyncStorage.setItem(
+        '@GoMarketplate:Products',
+        JSON.stringify([...newProducts]),
+      );
+      setProducts([...newProducts]);
     },
     [products],
   );
