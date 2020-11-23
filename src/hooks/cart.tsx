@@ -36,17 +36,71 @@ const CartProvider: React.FC = ({ children }) => {
     loadProducts();
   }, []);
 
-  const addToCart = useCallback(async product => {
-    // TODO ADD A NEW ITEM TO THE CART
-  }, []);
+  const addToCart = useCallback(
+    async product => {
+      const productToAdd = {
+        ...product,
+        quantity: 1,
+      };
 
-  const increment = useCallback(async id => {
-    // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+      const isProductInCart = products.filter(item => {
+        return productToAdd.id === item.id;
+      });
 
-  const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+      if (isProductInCart.length === 0) {
+        setProducts([...products, productToAdd]);
+      } else {
+        const productToEdit =
+          products.find(item => item.id === productToAdd.id) || ({} as Product);
+
+        const newProducts = products.filter(
+          item => item.id !== productToEdit.id,
+        );
+
+        const editedProduct = {
+          ...productToEdit,
+          quantity: productToEdit.quantity + 1,
+        };
+
+        setProducts([...newProducts, editedProduct]);
+      }
+    },
+    [products],
+  );
+
+  const increment = useCallback(
+    async id => {
+      const productToEdit =
+        products.find(item => item.id === id) || ({} as Product);
+
+      const newProducts = products.filter(item => item.id !== productToEdit.id);
+
+      const editedProduct = {
+        ...productToEdit,
+        quantity: productToEdit.quantity + 1,
+      };
+
+      setProducts([...newProducts, editedProduct]);
+    },
+    [products],
+  );
+
+  const decrement = useCallback(
+    async id => {
+      const productToEdit =
+        products.find(item => item.id === id) || ({} as Product);
+
+      const newProducts = products.filter(item => item.id !== productToEdit.id);
+
+      const editedProduct = {
+        ...productToEdit,
+        quantity: productToEdit.quantity - 1,
+      };
+
+      setProducts([...newProducts, editedProduct]);
+    },
+    [products],
+  );
 
   const value = React.useMemo(
     () => ({ addToCart, increment, decrement, products }),
